@@ -18,7 +18,7 @@ path = os.path.dirname(os.path.realpath(__file__))
 
 class Crawler:
 
-    def __init__(self,url):
+    def __init__(self, url):
         global visited_page
         self.url = url
         self.hostname = urlparse(url).netloc
@@ -41,37 +41,37 @@ class Crawler:
         self.visited_page.add(self.url)
         visited_page = visited_page | self.visited_page
 
-    def check_hostname(self,link):
+    def check_hostname(self, link):
         link_hostname = urlparse(link).netloc
         link_path = urlparse(link).path
         link_query = urlparse(link).query
         if "ku.ac.th" in link_hostname:
             if link_hostname != self.hostname:
                 return True
-            elif (link_query or len(link_path)>1):
+            elif (link_query or len(link_path) > 1):
                 return True
             else:
                 return False
         else:
             return False
 
-    def get_robot(self,url):
+    def get_robot(self, url):
         global robots
         url_parse = urlparse(url)
         host = url_parse.scheme + '://' + url_parse.netloc + '/'
         if not host in robots:
             try:
-                res = requests.get(host + 'robots.txt', timeout = 1)
+                res = requests.get(host + 'robots.txt', timeout=1)
                 if res.status_code != 404 and res.status_code != 403:
                     robots = res.text
                     robots.append(host)
-                    print['Found Robot at ' + host ]
+                    print( 'Found Robot at ' + host )
             except KeyboardInterrupt:
                 exit()
             except:
                 pass
 
-    def check_pdf(self,url):
+    def check_pdf(self, url):
         not_allow = ['.pdf']
         last_path = url[url.rfind('/'):]
         if last_path[last_path.rfind('.'):] in not_allow:
@@ -81,17 +81,18 @@ class Crawler:
 
 
 def check_tail(url):
-    allow_ext = ['.php','.html', '.htm']
+    allow_ext = ['.php', '.html', '.htm']
     last_path = url[url.rfind('/'):]
     if last_path[last_path.rfind('.'):] in allow_ext:
         return True
     else:
         return False
 
+
 def save_to_file(file_name, data):
     text_file = open(file_name, "w")
     for i in data:
-        text_file.write(i+"\n")
+        text_file.write(i + "\n")
         text_file.close()
 
 
@@ -99,17 +100,6 @@ def make_folder(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-
-def do_in_queqe():
-    global queue_visit
-    global visited_page
-    print(queue_visit.qsize())
-    print(len(visited_page))
-    if not queue_visit.empty() and len(visited_page) <= 10000:
-        url = queue_visit.get()
-        print('start with url : ' + url)
-        init_Crawler(url)
-        do_in_queqe()
 
 def init_Crawler(url):
     global path
@@ -126,7 +116,7 @@ def init_Crawler(url):
         #     if item != '':
         #         full_path = full_path + '/' + item
         #     make_folder(path + '/' + full_path)
-        html_file = open(url_hostname + '/' + paths[len(paths)-1] , "wb")
+        html_file = open(url_hostname + '/' + paths[len(paths) - 1], "wb")
         html_file.write(mycrawler.page)
         html_file.close()
         print('Save .html file to folder: ' + url_hostname)
@@ -134,6 +124,13 @@ def init_Crawler(url):
 
 if __name__ == '__main__':
     init_Crawler(start_page)
-    do_in_queqe()
-    save_to_file('robots.txt',robots)
+    while not queue_visit.empty() and len(visited_page) <= 10000:
+        print("Queue size:", queue_visit.qsize())
+        print("Visited Page:", len(visited_page))
+
+        url = queue_visit.get()
+        print('start with url : ' + url)
+        init_Crawler(url)
+        print()
+    save_to_file('robots.txt', robots)
     print('End')
