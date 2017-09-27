@@ -7,14 +7,14 @@ import urllib.request
 import os.path
 import queue
 
-start_page = "https://www.cpe.ku.ac.th"
+start_page = "http://www.vthh.vet.ku.ac.th"
 queue_visit = queue.Queue()
 set_page = set()
 visited_page = set()
 robots = []
 
 path = os.path.dirname(os.path.realpath(__file__))
-path = os.path.split(path)[0]
+
 
 class Crawler:
 
@@ -33,6 +33,8 @@ class Crawler:
         global set_page
         for a in self.soup.find_all('a', href=True):
             link = a.get('href')
+            if not urlparse(link).netloc:
+                link = self.url + '/' + link
             if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#':
                 set_page.add(link)
                 queue_visit.put(link)
@@ -43,7 +45,7 @@ class Crawler:
         link_hostname = urlparse(link).netloc
         link_path = urlparse(link).path
         link_query = urlparse(link).query
-        return (self.hostname == link_hostname) and (link_query or len(link_path)>1) and ("ku.ac.th" in link_hostname)
+        return (link_query or len(link_path)>1) and ("ku.ac.th" in link_hostname)
 
     def get_robot(self,url):
         global robots
@@ -71,7 +73,7 @@ def check_tail(url):
     else:
         return False
 
-def save_to_file(self,file_name, data):
+def save_to_file(file_name, data):
     text_file = open(file_name, "w")
     for i in data:
         text_file.write(i+"\n")
@@ -101,10 +103,14 @@ def init_Crawler(url):
     mycrawler.linkparser()
     if check_tail(url):
         url_path = urlparse(url).path
+        url_hostname = urlparse(url).netloc
         paths = url_path.split('/')
+        full_path = url_hostname
         for item in paths:
-            make_folder(path + '/' + item)
-        html_file = open(path + '/' + url_path, "w")
+            make_folder(path + '/' + full_path)
+            full_path += '/' + item
+
+        html_file = open(full_path, "wb")
         html_file.write(mycrawler.page)
         html_file.close()
 
@@ -112,5 +118,5 @@ def init_Crawler(url):
 if __name__ == '__main__':
     init_Crawler(start_page)
     do_in_queqe()
-    save_to_file(path,robots)
+    save_to_file('robots.txt',robots)
     print('End')
