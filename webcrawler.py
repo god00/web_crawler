@@ -35,7 +35,7 @@ class Crawler:
             link = a.get('href')
             if not urlparse(link).netloc:
                 link = self.url + '/' + link
-            if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#':
+            if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and not self.check_pdf(link):
                 set_page.add(link)
                 queue_visit.put(link)
         self.visited_page.add(self.url)
@@ -62,6 +62,11 @@ class Crawler:
                 exit()
             except:
                 pass
+
+    def check_pdf(self,url):
+        not_allow = ['.pdf']
+        last_path = url[url.rfind('/'):]
+        return last_path == '/' or last_path[last_path.rfind('.'):] in not_allow
 
 
 def check_tail(url):
