@@ -7,7 +7,7 @@ import urllib.request
 import os.path
 import queue
 
-start_page = "http://www.vthh.vet.ku.ac.th"
+start_page = "https://www.cpe.ku.ac.th"
 queue_visit = queue.Queue()
 set_page = set()
 visited_page = set()
@@ -33,9 +33,9 @@ class Crawler:
         global set_page
         for a in self.soup.find_all('a', href=True):
             link = a.get('href')
-            if not urlparse(link).netloc:
+            if not urlparse(link).netloc and urlparse(link).scheme == '':
                 link = self.url + '/' + link
-            if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and not self.check_pdf(link):
+            if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and (not self.check_pdf(link)):
                 set_page.add(link)
                 queue_visit.put(link)
         self.visited_page.add(self.url)
@@ -45,7 +45,15 @@ class Crawler:
         link_hostname = urlparse(link).netloc
         link_path = urlparse(link).path
         link_query = urlparse(link).query
-        return (link_query or len(link_path)>1) and ("ku.ac.th" in link_hostname)
+        if "ku.ac.th" in link_hostname:
+            if link_hostname != self.hostname:
+                return True
+            elif (link_query or len(link_path)>1):
+                return True
+            else:
+                return False
+        else:
+            return False
 
     def get_robot(self,url):
         global robots
@@ -66,14 +74,16 @@ class Crawler:
     def check_pdf(self,url):
         not_allow = ['.pdf']
         last_path = url[url.rfind('/'):]
-        return last_path == '/' or last_path[last_path.rfind('.'):] in not_allow
+        if last_path[last_path.rfind('.'):] in not_allow:
+            return True
+        else:
+            return False
 
 
 def check_tail(url):
     allow_ext = ['.php','.html', '.htm']
     last_path = url[url.rfind('/'):]
-    if last_path == '/' or last_path[last_path.rfind('.'):] in allow_ext:
-        print(url)
+    if last_path[last_path.rfind('.'):] in allow_ext:
         return True
     else:
         return False
@@ -110,14 +120,16 @@ def init_Crawler(url):
         url_path = urlparse(url).path
         url_hostname = urlparse(url).netloc
         paths = url_path.split('/')
-        full_path = url_hostname
-        for item in paths:
-            make_folder(path + '/' + full_path)
-            full_path += '/' + item
+        make_folder(path + '/' + url_hostname)
 
-        html_file = open(full_path, "wb")
+        # for item in paths:
+        #     if item != '':
+        #         full_path = full_path + '/' + item
+        #     make_folder(path + '/' + full_path)
+        html_file = open(url_hostname + '/' + paths[len(paths)-1] , "wb")
         html_file.write(mycrawler.page)
         html_file.close()
+        print('Save .html file to folder: ' + url_hostname)
 
 
 if __name__ == '__main__':
