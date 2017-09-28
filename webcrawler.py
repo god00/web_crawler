@@ -3,8 +3,7 @@ from urllib.parse import urlparse
 
 import requests
 import time
-import urllib.request
-import os.path
+import os
 import queue
 
 start_page = "https://www.cpe.ku.ac.th"
@@ -13,7 +12,7 @@ set_page = set()
 visited_page = set()
 robots = []
 
-path = os.path.dirname(os.path.realpath(__file__))
+PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 class Crawler:
@@ -23,9 +22,10 @@ class Crawler:
         try:
             self.url = url
             self.hostname = urlparse(url).netloc
-            self.page = requests.get(url,timeout=5).text
+            self.page = requests.get(url, timeout=5).text
             time.sleep(1)
-            self.soup = BeautifulSoup(self.page, 'html.parser', from_encoding="iso-8859-1")
+            self.soup = BeautifulSoup(
+                self.page, 'html.parser', from_encoding="iso-8859-1")
             self.visited_page = visited_page
         except KeyboardInterrupt:
             exit()
@@ -41,9 +41,9 @@ class Crawler:
                 link = a.get('href')
                 if not urlparse(link).netloc and urlparse(link).scheme == '':
                     link = self.url + '/' + link
-                if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and (not self.    check_pdf(link)):    
-                    set_page.add(link    )    
-                    queue_visit.put(link)    
+                if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and (not self.    check_pdf(link)):
+                    set_page.add(link)
+                    queue_visit.put(link)
             self.visited_page.add(self.url)
             visited_page = visited_page | self.visited_page
         except KeyboardInterrupt:
@@ -75,7 +75,7 @@ class Crawler:
                 if res.status_code != 404 and res.status_code != 403:
                     robots = res.text
                     robots.append(host)
-                    print( 'Found Robot at ' + host )
+                    print('Found Robot at ' + host)
             except KeyboardInterrupt:
                 exit()
             except:
@@ -106,13 +106,15 @@ def save_to_file(file_name, data):
         text_file.close()
 
 
-def make_folder(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
+def make_folder(url_hostname, url_path):
+    url_path_folder = url_path.split('/')[1:-1]
+    save_path = os.path.join(PATH, 'html', url_hostname, *url_path_folder)
+    print(save_path)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
 
 
 def init_Crawler(url):
-    global path
     try:
         mycrawler = Crawler(url)
         mycrawler.get_robot(url)
@@ -121,7 +123,7 @@ def init_Crawler(url):
             url_path = urlparse(url).path
             url_hostname = urlparse(url).netloc
             paths = url_path.split('/')
-            make_folder(path + '/' + url_hostname)
+            make_folder(url_hostname, url_path)
 
             # for item in paths:
             #     if item != '':
@@ -138,14 +140,16 @@ def init_Crawler(url):
 
 
 if __name__ == '__main__':
-    init_Crawler(start_page)
-    while not queue_visit.empty() and len(visited_page) <= 10000:
-        print("Queue size:", queue_visit.qsize())
-        print("Visited Page:", len(visited_page))
+    url_parse = urlparse("http://cpe.ku.ac.th/1/2/3/4.html")
+    make_folder(url_parse.netloc, url_parse.path)
+    # init_Crawler(start_page)
+    # while not queue_visit.empty() and len(visited_page) <= 10000:
+    #     print("Queue size:", queue_visit.qsize())
+    #     print("Visited Page:", len(visited_page))
 
-        url = queue_visit.get()
-        print('start with url : ' + url)
-        init_Crawler(url)
-        print()
-    save_to_file('robots.txt', robots)
-    print('End')
+    #     url = queue_visit.get()
+    #     print('start with url : ' + url)
+    #     init_Crawler(url)
+    #     print()
+    # save_to_file('robots.txt', robots)
+    # print('End')
