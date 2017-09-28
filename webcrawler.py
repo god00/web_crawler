@@ -30,6 +30,7 @@ class Crawler:
         except KeyboardInterrupt:
             exit()
         except:
+            print('Can\'t connection with ' + url)
             pass
 
     def linkparser(self):
@@ -79,6 +80,7 @@ class Crawler:
             except KeyboardInterrupt:
                 exit()
             except:
+                print("Unexpected error about to get robots.txt")
                 pass
 
     def check_pdf(self, url):
@@ -131,7 +133,7 @@ def init_Crawler(url):
     except KeyboardInterrupt:
         exit()
     except:
-        print('can\'t save .html to folder' + url_hostname + url_path)
+        print('Can\'t save .html to folder' + url_hostname + url_path)
         pass
 
 
