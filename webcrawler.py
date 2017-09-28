@@ -109,7 +109,7 @@ def save_to_file(file_name, data):
 def make_folder(url_hostname, url_path):
     url_path_folder = url_path.split('/')[1:-1]
     save_path = os.path.join(PATH, 'html', url_hostname, *url_path_folder)
-    print(save_path)
+    # print(save_path)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
@@ -122,34 +122,28 @@ def init_Crawler(url):
         if check_tail(url):
             url_path = urlparse(url).path
             url_hostname = urlparse(url).netloc
-            paths = url_path.split('/')
             make_folder(url_hostname, url_path)
 
-            # for item in paths:
-            #     if item != '':
-            #         full_path = full_path + '/' + item
-            #     make_folder(path + '/' + full_path)
-            html_file = open(url_hostname + '/' + paths[len(paths) - 1], "wb")
+            html_file = open('html/' + url_hostname + url_path, "wb")
             html_file.write(mycrawler.page)
             html_file.close()
-            print('Save .html file to folder: ' + url_hostname)
+            print('Save .html file to folder: ' + url_hostname + url_path)
     except KeyboardInterrupt:
         exit()
     except:
+        print('can\'t save .html to folder' + url_hostname + url_path)
         pass
 
 
 if __name__ == '__main__':
-    url_parse = urlparse("http://cpe.ku.ac.th/1/2/3/4.html")
-    make_folder(url_parse.netloc, url_parse.path)
-    # init_Crawler(start_page)
-    # while not queue_visit.empty() and len(visited_page) <= 10000:
-    #     print("Queue size:", queue_visit.qsize())
-    #     print("Visited Page:", len(visited_page))
+    init_Crawler(start_page)
+    while not queue_visit.empty() and len(visited_page) <= 10000:
+        print("Queue size:", queue_visit.qsize())
+        print("Visited Page:", len(visited_page))
 
-    #     url = queue_visit.get()
-    #     print('start with url : ' + url)
-    #     init_Crawler(url)
-    #     print()
-    # save_to_file('robots.txt', robots)
-    # print('End')
+        url = queue_visit.get()
+        print('start with url : ' + url)
+        init_Crawler(url)
+        print()
+    save_to_file('robots.txt', robots)
+    print('End')
