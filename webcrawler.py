@@ -20,26 +20,36 @@ class Crawler:
 
     def __init__(self, url):
         global visited_page
-        self.url = url
-        self.hostname = urlparse(url).netloc
-        self.page = requests.get(url).content
-        time.sleep(1)
-        self.soup = BeautifulSoup(self.page, 'html.parser', from_encoding="iso-8859-1")
-        self.visited_page = visited_page
+        try:
+            self.url = url
+            self.hostname = urlparse(url).netloc
+            self.page = requests.get(url,timeout=5).text
+            time.sleep(1)
+            self.soup = BeautifulSoup(self.page, 'html.parser', from_encoding="iso-8859-1")
+            self.visited_page = visited_page
+        except KeyboardInterrupt:
+            exit()
+        except:
+            pass
 
     def linkparser(self):
         global queue_visit
         global visited_page
         global set_page
-        for a in self.soup.find_all('a', href=True):
-            link = a.get('href')
-            if not urlparse(link).netloc and urlparse(link).scheme == '':
-                link = self.url + '/' + link
-            if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and (not self.check_pdf(link)):
-                set_page.add(link)
-                queue_visit.put(link)
-        self.visited_page.add(self.url)
-        visited_page = visited_page | self.visited_page
+        try:
+            for a in self.soup.find_all('a', href=True):
+                link = a.get('href')
+                if not urlparse(link).netloc and urlparse(link).scheme == '':
+                    link = self.url + '/' + link
+                if self.check_hostname(link) and link not in visited_page and link not in set_page and link != '#' and (not self.    check_pdf(link)):    
+                    set_page.add(link    )    
+                    queue_visit.put(link)    
+            self.visited_page.add(self.url)
+            visited_page = visited_page | self.visited_page
+        except KeyboardInterrupt:
+            exit()
+        except:
+            pass
 
     def check_hostname(self, link):
         link_hostname = urlparse(link).netloc
@@ -61,7 +71,7 @@ class Crawler:
         host = url_parse.scheme + '://' + url_parse.netloc + '/'
         if not host in robots:
             try:
-                res = requests.get(host + 'robots.txt', timeout=1)
+                res = requests.get(host + 'robots.txt', timeout=5)
                 if res.status_code != 404 and res.status_code != 403:
                     robots = res.text
                     robots.append(host)
@@ -103,23 +113,28 @@ def make_folder(path):
 
 def init_Crawler(url):
     global path
-    mycrawler = Crawler(url)
-    mycrawler.get_robot(url)
-    mycrawler.linkparser()
-    if check_tail(url):
-        url_path = urlparse(url).path
-        url_hostname = urlparse(url).netloc
-        paths = url_path.split('/')
-        make_folder(path + '/' + url_hostname)
+    try:
+        mycrawler = Crawler(url)
+        mycrawler.get_robot(url)
+        mycrawler.linkparser()
+        if check_tail(url):
+            url_path = urlparse(url).path
+            url_hostname = urlparse(url).netloc
+            paths = url_path.split('/')
+            make_folder(path + '/' + url_hostname)
 
-        # for item in paths:
-        #     if item != '':
-        #         full_path = full_path + '/' + item
-        #     make_folder(path + '/' + full_path)
-        html_file = open(url_hostname + '/' + paths[len(paths) - 1], "wb")
-        html_file.write(mycrawler.page)
-        html_file.close()
-        print('Save .html file to folder: ' + url_hostname)
+            # for item in paths:
+            #     if item != '':
+            #         full_path = full_path + '/' + item
+            #     make_folder(path + '/' + full_path)
+            html_file = open(url_hostname + '/' + paths[len(paths) - 1], "wb")
+            html_file.write(mycrawler.page)
+            html_file.close()
+            print('Save .html file to folder: ' + url_hostname)
+    except KeyboardInterrupt:
+        exit()
+    except:
+        pass
 
 
 if __name__ == '__main__':
